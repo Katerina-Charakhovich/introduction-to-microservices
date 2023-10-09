@@ -39,7 +39,7 @@ public class SongService {
         List<SongEntity> songEntities = new ArrayList<>();
         for (long i : ids
         ) {
-            Optional<SongEntity> songEntity = songRepository.findById(i);
+            Optional<SongEntity> songEntity = songRepository.findByResourceId(i);
             songEntity.ifPresent(songEntities::add);
         }
          songRepository.deleteAll(songEntities);

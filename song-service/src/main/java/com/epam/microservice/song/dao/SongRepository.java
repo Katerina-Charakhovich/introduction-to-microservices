@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface SongRepository extends JpaRepository<SongEntity, Long> {
         Optional<SongEntity> findById(Long id);
+        Optional<SongEntity> findByResourceId(Long id);
 }
