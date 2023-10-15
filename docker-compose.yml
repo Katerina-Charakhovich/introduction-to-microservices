@@ -1,0 +1,78 @@
+version: "3"
+
+services:
+  song-service:
+    hostname: song-service
+    container_name: "song-service"
+    image: song-service:2.0.1
+    ports:
+      - "8022:8022"
+    depends_on:
+      - song-service-db
+      - eureka-server
+    env_file:
+      - "song-service/song.service.env"
+
+  song-service2:
+    hostname: song-service2
+    container_name: "song-service2"
+    image: song-service:2.0.1
+    ports:
+      - "8032:8022"
+    depends_on:
+      - song-service-db
+      - eureka-server
+    env_file:
+      - "song-service/song.service.env"
+
+  song-service-db:
+    hostname: song-service-db
+    container_name: "song-service-db"
+    image: song-service-db:2.0.1
+    ports:
+      - "5306:3306"
+
+  resource-service:
+    container_name: "resource-service"
+    hostname: resource-service
+    image: resource-service:2.0.1
+    ports:
+      - "8026:8026"
+    depends_on:
+      - resource-service-db
+      - song-service
+      - eureka-server
+    env_file:
+      - "resource-service/resource.service.env"
+
+  resource-service-db:
+    hostname: resource-service-db
+    container_name: "resource-service-db"
+    image: resource-service-db:2.0.1
+    ports:
+      - "4306:3306"
+
+  eureka-server:
+    hostname: eureka-server
+    container_name: "eureka-server"
+    image: eureka-sever:2.0.1
+    ports:
+      - "8761:8761"
+    expose:
+      - '8761'
+
+
+  gateway:
+    hostname: gateway
+    container_name: "gateway"
+    image: cloud-gateway:2.0.1
+    depends_on:
+      - eureka-server
+    ports:
+      - "8090:8090"
+    expose:
+      - '8090'
+    env_file:
+      - "cloud-gateway/gateway.env"
+
+
