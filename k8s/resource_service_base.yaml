@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: k8s-program
+  name: resource-service-db-config
+  labels:
+    app: resource-service-db
+data:
+  MYSQL_ROOT_PASSWORD: root
+
+
+---
+
+# MySQL StatefulSet Service
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: k8s-program
+  name: resource-service-s
+spec:
+  selector:
+    app: resource-service-db
+  clusterIP: 10.110.15.14
+  ports:
+  - port: 3306
+    targetPort: 3306
+---
+
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: k8s-program
+  name: resource-service-db
+spec:
+  serviceName: resource-service-db
+  selector:
+    matchLabels:
+      app: resource-service-db
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: resource-service-db
+    spec:
+      containers:
+      - name: mysql-container
+        image: mysql:5.7
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: resource-service-pvc
+          mountPath: /var/lib/mysql
+        envFrom:
+        - configMapRef:
+            name: resource-service-db-config
+  volumeClaimTemplates:
+    - metadata:
+        name: resource-service-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi

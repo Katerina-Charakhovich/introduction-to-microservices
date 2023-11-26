@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: song-pv
+  namespace: k8s-program
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  storageClassName: manual
+  hostPath:
+    path: /tmp/song-pv
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: resource-pv
+  namespace: k8s-program
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  storageClassName: manual
+  hostPath:
+    path: /tmp/resource-pv
+
