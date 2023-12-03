@@ -1,30 +1,28 @@
-
-
 apiVersion: v1
 kind: Service
 metadata:
-  name: song-service
+  name: resource-service
   namespace: k8s-program
 spec:
   type: NodePort
   selector:
-    app: song-service-pod
+    app: resource-service-pod
   ports:
     - protocol: "TCP"
-      port: 8022
-      targetPort: 8022
+      port: 8026
+      targetPort: 8026
 
 ---
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: song-service
+  name: resource-service
   namespace: k8s-program
 spec:
   selector:
     matchLabels:
-      app: song-service-pod
+      app: resource-service-pod
   replicas: 2
   strategy:
     type: RollingUpdate
@@ -34,52 +32,46 @@ spec:
   template:
     metadata:
       labels:
-        app: song-service-pod
+        app: resource-service-pod
         owner: katerinaCharakhovich
     spec:
       containers:
-        - name: song-service-container
-          image: charakhovich/song-service:3.0.0
+        - name: resource-service-container
+          image: charakhovich/resource-service:3.0.0
           ports:
-            - containerPort: 8022
+            - containerPort: 8026
           envFrom:
-          - configMapRef:
-             name: song-service-config
+            - configMapRef:
+                name: resource-service-config
           env:
             - name: DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: song-service-db-secret
+                  name: resource-service-db-secret
                   key: username
             - name: DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: song-service-db-secret
+                  name: resource-service-db-secret
                   key: password
           startupProbe:
             httpGet:
               scheme: HTTP
               path: /actuator/health
-              port: 8022
-            initialDelaySeconds: 120
-            periodSeconds: 3
-          readinessProbe:
+              port: 8026
             initialDelaySeconds: 120
             periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 5
-            failureThreshold: 3
-            httpGet:
-              scheme: HTTP
-              path: /actuator/health/readiness
-              port: 8022
           livenessProbe:
-            initialDelaySeconds: 120
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 5
-            failureThreshold: 3
             httpGet:
               scheme: HTTP
               path: /actuator/health/liveness
-              port: 8022
+              port: 8026
+            initialDelaySeconds: 120
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              scheme: HTTP
+              path: /actuator/health/readiness
+              port: 8026
+            initialDelaySeconds: 120
+            periodSeconds: 3

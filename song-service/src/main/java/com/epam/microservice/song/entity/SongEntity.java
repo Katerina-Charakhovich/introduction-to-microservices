@@ -28,5 +28,7 @@ public class SongEntity<T> {
         private int year;
         @Column(name = "resource_id")
         private long resourceId;
+        @Column(name = "genre")
+        private String genre;
     }
 

@@ -5,10 +5,17 @@ metadata:
   name: resource-service-db-config
   labels:
     app: resource-service-db
+    mame: resource-data-store
 data:
-  MYSQL_ROOT_PASSWORD: root
-
-
+  init.sql: |
+    CREATE DATABASE schema_resources;
+    USE schema_resources;
+    CREATE TABLE `resource` (
+    `id` int NOT NULL AUTO_INCREMENT,
+    `filename` varchar(255) NOT NULL,
+    `file` longblob,
+    PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4
 ---
 
 # MySQL StatefulSet Service
@@ -48,15 +55,27 @@ spec:
         image: mysql:5.7
         ports:
         - containerPort: 3306
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: resource-service-db-secret
+                key: password
         volumeMounts:
-        - name: resource-service-pvc
-          mountPath: /var/lib/mysql
-        envFrom:
-        - configMapRef:
+          - name: resource-mysql-initdb
+            mountPath: /docker-entrypoint-initdb.d
+          - name: resource-data-store
+            mountPath: "/var/lib/mysql"
+            subPath: "mysql"
+      volumes:
+        - name: resource-mysql-initdb
+          configMap:
             name: resource-service-db-config
   volumeClaimTemplates:
     - metadata:
-        name: resource-service-pvc
+        name: resource-data-store
+        labels:
+          mame: resource-data-store
       spec:
         accessModes:
           - ReadWriteOnce
