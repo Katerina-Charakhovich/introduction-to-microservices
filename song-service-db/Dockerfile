@@ -17,5 +17,3 @@ RUN ["/usr/local/bin/docker-entrypoint.sh", "mysqld", "--datadir", "/initialized
 FROM mysql:latest
 
 COPY --from=builder /initialized-db /var/lib/mysql
-
-EXPOSE 3306

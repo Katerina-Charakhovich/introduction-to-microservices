@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: k8s-program
+  name: resource-service-db-config
+  labels:
+    app: resource-service-db
+    mame: resource-data-store
+data:
+  init.sql: |
+    CREATE DATABASE schema_resources;
+    USE schema_resources;
+    CREATE TABLE `resource` (
+    `id` int NOT NULL AUTO_INCREMENT,
+    `filename` varchar(255) NOT NULL,
+    `file` longblob,
+    PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4
+---
+
+# MySQL StatefulSet Service
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: k8s-program
+  name: resource-service-s
+spec:
+  selector:
+    app: resource-service-db
+  clusterIP: 10.110.15.14
+  ports:
+  - port: 3306
+    targetPort: 3306
+---
+
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: k8s-program
+  name: resource-service-db
+spec:
+  serviceName: resource-service-db
+  selector:
+    matchLabels:
+      app: resource-service-db
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: resource-service-db
+    spec:
+      containers:
+      - name: mysql-container
+        image: mysql:5.7
+        ports:
+        - containerPort: 3306
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: resource-service-db-secret
+                key: password
+        volumeMounts:
+          - name: resource-mysql-initdb
+            mountPath: /docker-entrypoint-initdb.d
+          - name: resource-data-store
+            mountPath: "/var/lib/mysql"
+            subPath: "mysql"
+      volumes:
+        - name: resource-mysql-initdb
+          configMap:
+            name: resource-service-db-config
+  volumeClaimTemplates:
+    - metadata:
+        name: resource-data-store
+        labels:
+          mame: resource-data-store
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi

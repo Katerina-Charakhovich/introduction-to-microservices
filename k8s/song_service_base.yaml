@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: k8s-program
+  name: song-service-db-config
+  labels:
+    name: song-data-storage
+data:
+  init.sql: |
+    CREATE DATABASE schema_songs;
+    USE schema_songs;
+    CREATE TABLE `songs` (
+    `id` int NOT NULL AUTO_INCREMENT,  `name` varchar(255) NOT NULL,  `artist` varchar(255) NOT NULL,
+    `album` varchar(255) NOT NULL,
+    `length` int,
+    `year` int,
+    `resource_id` int,
+    PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4
+
+---
+
+# MySQL StatefulSet Service
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: k8s-program
+  name: song-service-s
+spec:
+  selector:
+    app: song-service-db
+  clusterIP: 10.110.15.13
+  ports:
+  - port: 3306
+    targetPort: 3306
+---
+
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: k8s-program
+  name: song-service-db
+spec:
+  serviceName: song-service-db
+  selector:
+    matchLabels:
+      app: song-service-db
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: song-service-db
+    spec:
+      containers:
+      - name: mysql-container
+        image: mysql:5.7
+        ports:
+        - containerPort: 3306
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: song-service-db-secret
+                key: password
+        volumeMounts:
+          - name: song-mysql-initdb
+            mountPath: /docker-entrypoint-initdb.d
+          - name: song-data-store
+            mountPath: "/var/lib/mysql"
+            subPath: "mysql"
+      volumes:
+        - name: song-mysql-initdb
+          configMap:
+            name: song-service-db-config
+  volumeClaimTemplates:
+    - metadata:
+        name: song-data-store
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+

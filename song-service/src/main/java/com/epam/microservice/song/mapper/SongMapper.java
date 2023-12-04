@@ -4,6 +4,8 @@ import com.epam.microservice.song.dto.SongDto;
 import com.epam.microservice.song.entity.SongEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 @Component
 public class SongMapper {
     public SongEntity  toSongEntity (SongDto  songDto) {
@@ -17,6 +19,9 @@ public class SongMapper {
         songEntity.setLength(songDto.getLength());
         songEntity.setYear(songDto.getYear());
         songEntity.setResourceId(songDto.getResourceId());
+        if (!Objects.isNull(songDto.getGenre())){
+            songEntity.setGenre(songDto.getGenre());
+        }
         return songEntity;
     }
 }
